@@ -14,9 +14,9 @@ I have also included a previous version of the script which would compile archiv
  - libelf-dev (in order to build the kernel)
  - libncurses-dev (optional - needed for menuconfig)
  
-# Step-by-Step
+## Step-by-Step
 
-## Building the kernel
+#### Building the kernel
 
 Start off by cloning the linux source code from github
 
@@ -46,6 +46,7 @@ cp ../miniconfig_x64 .config
 ```
 
 If you want to create your own configuration just modify the ".config" file.
+
 Having chosen the configuration, we are ready to build the kernel.
 
 
@@ -56,3 +57,29 @@ done
 ```
 A bug makes the build stop randomly with clang, so we start it again if it is not finished
 However, this will loop if there is an actual error.
+
+
+#### Extracting the bitcode
+
+The [built-in-parsing.py](built-in-parsing.py) script scans the linux build for "built-in.o" archives and extracts the corresponding bitcode. It also dynamically writes a script that copies all these files into the directory that is specified as the first argument. 
+
+```
+mkdir wrapper-logs
+export WLLVM_OUTPUT_FILE=wrapper-logs/wrapper.log
+python ../built-in-parsing.py {full-path-to-directory-where-the-bitcode-should-be-stored} 
+```
+
+The "build_script.sh" would have been created by the previous command which copies all the bitcodes into the build directory and links them to create the vmlinux file. 
+
+
+#### Installing the kernel
+
+We can now bring back the vmlinux file and install it on our system.
+
+```
+cp {full-path-to-directory-where-the-bitcode-should-be-stored}/vmlinux .
+cp ../install.sh .
+bash install.sh
+```
+
+And we are done. We have succesfully built the Linux kernel, extracted its bitcode, linked the bitcodes to create a vmlinux file and installed on our system. Rebooting should be on the installed kernel.
